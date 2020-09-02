@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <string.h>
+#include "console.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,18 +59,6 @@ static void MX_USART2_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void sendChar(char c)
-{
-	HAL_UART_Transmit(&huart2, (uint8_t *)&c, 1, 1000);
-}
-
-int __io_putchar(int c)
-{
-  if (c == '\n') sendChar('\r');
-  sendChar(c);
-  return c;
-}
-
 /* USER CODE END 0 */
 
 /**
@@ -103,23 +92,32 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  initConsole();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  int i = 0;
+  printf("HDD Clock!\n");
+
+  uint32_t lastHeartbeatTick = 0;
+  uint32_t now = 0;
+
   while (1)
   {
-
-	  printf("HDD Clock! %d\n", i++);
-	  //HAL_UART_Transmit(&huart2, (uint8_t *)data, strlen(data), 1000);
+    processConsoleInput();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+    now = HAL_GetTick();
+    if (now - lastHeartbeatTick >= 1000)
+    {
+      lastHeartbeatTick = now;
+      HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+    }
 
-    HAL_Delay(1000);
+    HAL_Delay(10);
   }
   /* USER CODE END 3 */
 }
