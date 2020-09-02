@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include "rtc.h"
+
 
 #define BUFFER_SIZE 64
 #define IS_ENTER(ch) ((ch) == '\r' || (ch) == '\n')
@@ -69,6 +71,11 @@ void processConsoleInput(void)
   case 'w':
     numberTest(key);
     break;
+
+  case 'z':
+    rtcRead();
+    break;
+
 
   default:
     break;
