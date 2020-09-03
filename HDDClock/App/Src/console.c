@@ -75,7 +75,7 @@ static void setTime(uint8_t key)
   }
   else
   {
-    printf("Enter new time:\n");
+    printf("Enter new time (hh:mm:ss):\n");
     inProgress = true;
   }
 }
@@ -102,7 +102,7 @@ static void setDate(uint8_t key)
   }
   else
   {
-    printf("Enter new date:\n");
+    printf("Enter new date (dd/mm/yy):\n");
     inProgress = true;
   }
 }
