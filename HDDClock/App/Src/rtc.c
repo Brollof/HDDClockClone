@@ -7,6 +7,7 @@
 #define RTC_ADDRESS             0xD0 // 0x68 << 1
 #define RTC_REG_BASE            0x00
 #define RTC_I2C_TIMEOUT         200 // ms
+#define RTC_INIT_RETRIES        3
 #define RTC_I2C_HANDLE          hi2c1
 
 // Converts single char digit into integer using ASCII table offset
@@ -38,16 +39,42 @@ static HAL_StatusTypeDef rtcRead(uint8_t rtcRegAddr, uint8_t *buf, uint8_t size)
   return HAL_I2C_Mem_Read(&RTC_I2C_HANDLE, RTC_ADDRESS, rtcRegAddr, sizeof(uint8_t), buf, size, RTC_I2C_TIMEOUT);
 }
 
+static void rtcReinit(void)
+{
+  printf("RTC re-init...\n");
+  if (HAL_I2C_DeInit(&RTC_I2C_HANDLE) != HAL_OK)
+  {
+    printf("deinit failed!\n");
+  }
+
+  HAL_Delay(50);
+
+  if (HAL_I2C_Init(&RTC_I2C_HANDLE) != HAL_OK)
+  {
+    printf("init failed!\n");
+  }
+}
+
 void rtcInit(void)
 {
-  if (rtcUpdateDateTime() == true)
+  uint8_t retries = RTC_INIT_RETRIES;
+
+  while (retries)
   {
-    printf("RTC initialized\n");
+    retries--;
+    if (rtcUpdateDateTime() == true)
+    {
+      printf("RTC initialized\n");
+      return;
+    }
+    else
+    {
+      printf("RTC initialization failed!\n");
+      rtcReinit();
+    }
+    HAL_Delay(50);
   }
-  else
-  {
-    printf("RTC initialization failed!\n");
-  }
+  printf("RTC ERROR, not initialized after %d retries!\n", RTC_INIT_RETRIES);
 }
 
 void rtcPrintDateTime(void)
