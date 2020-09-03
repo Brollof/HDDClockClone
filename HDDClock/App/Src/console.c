@@ -52,6 +52,61 @@ static void numberTest(uint8_t key)
   }
 }
 
+// TODO: refactor console interaction
+static void setTime(uint8_t key)
+{
+  if (inProgress)
+  {
+    printf("%c", key);
+    // Skip backspace character and remove last char
+    if ((uint8_t)key == 127)
+      pos--;
+    else
+      data[pos++] = key;
+
+    if (IS_ENTER(key))
+    {
+      printf("\n");
+      rtcSetTimeFromString((const char *)data, 8);
+
+      inProgress = false;
+      clearBuffer();
+    }
+  }
+  else
+  {
+    printf("Enter new time:\n");
+    inProgress = true;
+  }
+}
+
+static void setDate(uint8_t key)
+{
+  if (inProgress)
+  {
+    printf("%c", key);
+    // Skip backspace character and remove last char
+    if ((uint8_t)key == 127)
+      pos--;
+    else
+      data[pos++] = key;
+
+    if (IS_ENTER(key))
+    {
+      printf("\n");
+      rtcSetDateFromString((const char *)data, 8);
+
+      inProgress = false;
+      clearBuffer();
+    }
+  }
+  else
+  {
+    printf("Enter new date:\n");
+    inProgress = true;
+  }
+}
+
 void processConsoleInput(void)
 {
   // Check if there is new data
@@ -72,10 +127,21 @@ void processConsoleInput(void)
     numberTest(key);
     break;
 
-  case 'z':
-    rtcRead();
+  case 'p':
+    rtcPrintDateTime();
     break;
 
+  case 'u':
+    rtcUpdateDateTime();
+    break;
+
+  case 't':
+    setTime(key);
+    break;
+
+  case 'd':
+    setDate(key);
+    break;
 
   default:
     break;

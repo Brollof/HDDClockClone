@@ -1,39 +1,210 @@
-#include "rtc.h"
 #include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+#include "rtc.h"
 #include "stm32f1xx_hal.h"
 
-#define RTC_ADDRESS (0x68 << 1)
+#define RTC_ADDRESS             0xD0 // 0x68 << 1
+#define RTC_REG_BASE            0x00
+#define RTC_I2C_TIMEOUT         200 // ms
+#define RTC_I2C_HANDLE          hi2c1
 
-#define RTC_I2C_HANDLE hi2c1
+// Converts single char digit into integer using ASCII table offset
+#define TO_NUM(ch)              ((uint8_t)(ch) - 48)
+
+// Timekeeper registers offset
+enum
+{
+  SECONDS_IDX = 0,
+  MINUTES_IDX,
+  HOURS_IDX,
+  WEEKDAY_IDX,
+  DAY_IDX,
+  MONTH_IDX,
+  YEAR_IDX,
+  TIMEKEEPER_IDX_MAX,
+};
 
 extern I2C_HandleTypeDef RTC_I2C_HANDLE;
+static DateTime_t dt = {0};
 
+static HAL_StatusTypeDef rtcWrite(uint8_t rtcRegAddr, uint8_t *buf, uint8_t size)
+{
+  return HAL_I2C_Mem_Write(&RTC_I2C_HANDLE, RTC_ADDRESS, rtcRegAddr, sizeof(uint8_t), buf, size, RTC_I2C_TIMEOUT);
+}
+
+static HAL_StatusTypeDef rtcRead(uint8_t rtcRegAddr, uint8_t *buf, uint8_t size)
+{
+  return HAL_I2C_Mem_Read(&RTC_I2C_HANDLE, RTC_ADDRESS, rtcRegAddr, sizeof(uint8_t), buf, size, RTC_I2C_TIMEOUT);
+}
 
 void rtcInit(void)
 {
-  printf("RTC initialized\n");
-}
-
-void rtcRead(void)
-{
-  uint8_t buf[7];
-  HAL_StatusTypeDef status = HAL_I2C_Mem_Read(&RTC_I2C_HANDLE, RTC_ADDRESS, 0x00, 1, buf, 7, 200);
-
-  uint8_t secs = ((buf[0] & 0x7F) >> 4) * 10 + (buf[0] & 0x0F);
-  uint8_t mins = (buf[1] >> 4) * 10 + (buf[1] & 0x0F);
-  uint8_t hours = ((buf[2] & 0x3F) >> 4) * 10 + (buf[2] & 0x0F);
-
-  uint8_t weekday = buf[3];
-  uint8_t day = (buf[4] >> 4) * 10 + (buf[4] & 0x0F);
-  uint8_t month = (buf[5] >> 4) * 10 + (buf[5] & 0x0F);
-  uint8_t year = (buf[6] >> 4) * 10 + (buf[6] & 0x0F);
-
-  if (status == HAL_OK)
+  if (rtcUpdateDateTime() == true)
   {
-    printf("%02d:%02d:%02d %02d/%02d/%d\n", hours, mins, secs, day, month, year);
+    printf("RTC initialized\n");
   }
   else
   {
-    printf("Sraka. Status: %d\n", status);
+    printf("RTC initialization failed!\n");
+  }
+}
+
+void rtcPrintDateTime(void)
+{
+  printf("%d%d:%d%d:%d%d %d%d/%d%d/%d%d\n",
+         dt.time.hoursH,     dt.time.hoursL,
+         dt.time.minutesH,   dt.time.minutesL,
+         dt.time.secondsH,   dt.time.secondsL,
+         dt.date.dayH,       dt.date.dayL,
+         dt.date.monthH,     dt.date.monthL,
+         dt.date.yearH,      dt.date.yearL);
+}
+
+bool rtcUpdateDateTime(void)
+{
+  uint8_t buf[TIMEKEEPER_IDX_MAX];
+
+  HAL_StatusTypeDef status = rtcRead(RTC_REG_BASE, buf, sizeof(buf));
+  if (status != HAL_OK)
+  {
+    printf("RTC Read failed, status: %d\n", status);
+    return false;
+  }
+
+  printf("RTC read ok\n");
+
+  dt.time.secondsH = (buf[SECONDS_IDX] & 0x7F) >> 4;
+  dt.time.secondsL = buf[SECONDS_IDX] & 0x0F;
+  dt.time.minutesH = buf[MINUTES_IDX] >> 4;
+  dt.time.minutesL = buf[MINUTES_IDX] & 0x0F;
+  dt.time.hoursH = (buf[HOURS_IDX] & 0x3F) >> 4;
+  dt.time.hoursL = buf[HOURS_IDX] & 0x0F;
+
+  dt.date.dayH = buf[DAY_IDX] >> 4;
+  dt.date.dayL = buf[DAY_IDX] & 0x0F;
+  dt.date.monthH = buf[MONTH_IDX] >> 4;
+  dt.date.monthL = buf[MONTH_IDX] & 0x0F;
+  dt.date.yearH = buf[YEAR_IDX] >> 4;
+  dt.date.yearL = buf[YEAR_IDX] & 0x0F;
+
+  return true;
+}
+
+// Time string example: 09:35:00
+void rtcSetTimeFromString(const char *sTime, uint8_t sLen)
+{
+  if (sLen < 8)
+  {
+    printf("String time too short!\n");
+    return;
+  }
+
+  // Validate input
+  for (uint8_t i = 0; i < sLen; i++)
+  {
+    if (i == 2 || i == 5)
+    {
+      continue;
+    }
+
+    if (isdigit(sTime[i]) == false)
+    {
+      printf("Incorrect time digits given!\n");
+      return;
+    }
+  }
+
+  const Time_t time =
+  {
+    .hoursH = TO_NUM(sTime[0]),
+    .hoursL = TO_NUM(sTime[1]),
+    // index 2 skipped - colon character
+    .minutesH = TO_NUM(sTime[3]),
+    .minutesL = TO_NUM(sTime[4]),
+    // index 5 skipped - colon character
+    .secondsH = TO_NUM(sTime[6]),
+    .secondsL = TO_NUM(sTime[7])
+  };
+
+  rtcSetTime(&time);
+}
+
+// Date string example: 03/12/20
+void rtcSetDateFromString(const char *sDate, uint8_t sLen)
+{
+  if (sLen < 8)
+  {
+    printf("String date too short!\n");
+    return;
+  }
+
+  // Validate input
+  for (uint8_t i = 0; i < sLen; i++)
+  {
+    if (i == 2 || i == 5)
+    {
+      continue;
+    }
+
+    if (isdigit(sDate[i]) == false)
+    {
+      printf("Incorrect date digits given!\n");
+      return;
+    }
+  }
+
+  const Date_t date =
+  {
+    .dayH = TO_NUM(sDate[0]),
+    .dayL = TO_NUM(sDate[1]),
+    // index 2 skipped - slash character
+    .monthH = TO_NUM(sDate[3]),
+    .monthL = TO_NUM(sDate[4]),
+    // index 5 skipped - slash character
+    .yearH = TO_NUM(sDate[6]),
+    .yearL = TO_NUM(sDate[7])
+  };
+
+  rtcSetDate(&date);
+}
+
+void rtcSetTime(const Time_t *time)
+{
+  uint8_t buf[3];
+  buf[0] = (time->secondsH << 4) | time->secondsL;
+  buf[1] = (time->minutesH << 4) | time->minutesL;
+  buf[2] = (time->hoursH << 4) | time->hoursL;
+
+  HAL_StatusTypeDef status = rtcWrite(RTC_REG_BASE, buf, sizeof(buf));
+  if (status == HAL_OK)
+  {
+    printf("RTC write ok\n");
+    // update global date-time structure
+    memcpy(&dt.time, time, sizeof(dt.time));
+  }
+  else
+  {
+    printf("RTC write failed, status: %d\n", status);
+  }
+}
+
+void rtcSetDate(const Date_t *date)
+{
+  uint8_t buf[3];
+  buf[0] = (date->dayH << 4) | date->dayL;
+  buf[1] = (date->monthH << 4) | date->monthL;
+  buf[2] = (date->yearH << 4) | date->yearL;
+
+  HAL_StatusTypeDef status = rtcWrite(RTC_REG_BASE + DAY_IDX, buf, sizeof(buf));
+  if (status == HAL_OK)
+  {
+    printf("RTC write ok\n");
+    // update global date-time structure
+    memcpy(&dt.date, date, sizeof(dt.date));
+  }
+  else
+  {
+    printf("RTC write failed, status: %d\n", status);
   }
 }
