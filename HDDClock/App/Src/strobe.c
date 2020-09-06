@@ -17,14 +17,16 @@
 #define COLON_ENABLE()        HAL_GPIO_WritePin(COLON_GPIO_Port, COLON_Pin, 1)
 #define COLON_DISABLE()       HAL_GPIO_WritePin(COLON_GPIO_Port, COLON_Pin, 0)
 
-#define DIGIT_1_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, fullSpin * digitMap[H10_IDX][(d)] / 12)
-#define DIGIT_2_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, fullSpin * digitMap[H1_IDX][(d)] / 12)
+#define GET_CNT_VAL(idx, digit) (fullSpin * factors[idx][digit] + offsets[idx])
+
+#define DIGIT_1_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, GET_CNT_VAL(H10_IDX, d))
+#define DIGIT_2_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, GET_CNT_VAL(H1_IDX, d))
 #define COLON_HH_SET_TIMER()  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, fullSpin * 5 / 48)
-#define DIGIT_3_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, fullSpin * digitMap[M10_IDX][(d)] / 24)
-#define DIGIT_4_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, fullSpin * digitMap[M1_IDX][(d)] / 24)
-#define COLON_MM_SET_TIMER()  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, fullSpin * 19 / 48);
-#define DIGIT_5_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, fullSpin * digitMap[S10_IDX][(d)] / 12)
-#define DIGIT_6_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, fullSpin * digitMap[S1_IDX][(d)] / 12)
+#define DIGIT_3_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, GET_CNT_VAL(M10_IDX, d))
+#define DIGIT_4_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, GET_CNT_VAL(M1_IDX, d))
+#define COLON_MM_SET_TIMER()  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, fullSpin * 19 / 48)
+#define DIGIT_5_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, GET_CNT_VAL(S10_IDX, d))
+#define DIGIT_6_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, GET_CNT_VAL(S1_IDX, d))
 
 #define DIGIT_1_START()       HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_1)
 #define DIGIT_2_START()       HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_2)
@@ -50,21 +52,21 @@ extern TIM_HandleTypeDef htim4;
 
 volatile uint16_t fullSpin = 0;
 static volatile bool newSpin = false;
-volatile int32_t offset1 = 0;
-volatile int32_t offset2 = 0;
 
 static StrobeCfg_t cfg = {0};
 
-// colons - special case
-uint8_t digitMap[][10] =
+// Offsets for 6 digits
+int32_t offsets[6] = {0};
+
+static const float factors[][10] =
 {
-  // MAP:    0   1   2   3   4  /* : */  5   6   7   8   9
-  [H10_IDX]{10, 11,  0,  1,  2, /* 3,*/  4,  5,  6,  7,  8}, // 12
-  [H1_IDX] { 9, 10, 11,  0,  1, /* 2,*/  3,  4,  5,  6,  7}, // 12
-  [M10_IDX]{15, 17, 19, 21, 23, /* 0,*/  3,  5, 71,  9, 11}, // 24
-  [M1_IDX] {13, 15, 17, 19, 21, /*11,*/  1,  3,  5,  7,  9}, // 24
-  [S10_IDX]{ 5,  6,  7,  8,  9, /* 9,*/ 11,  0,  1,  2,  3}, // 12
-  [S1_IDX] { 4,  5,  6,  7,  8, /* 8,*/ 10, 11,  0,  1,  2}  // 12
+  //          0      1       2     3      4      5     6      7     8      9
+  [H10_IDX]{10/12.0, 11/12.0,  0/12.0,  1/12.0,  2/12.0,  4/12.0,  5/12.0,  6/12.0, 7/12.0,  8/12.0},
+  [H1_IDX] { 9/12.0, 10/12.0, 11/12.0,  0/12.0,  1/12.0,  3/12.0,  4/12.0,  5/12.0, 6/12.0,  7/12.0},
+  [M10_IDX]{15/24.0, 17/24.0, 19/24.0, 21/24.0, 23/24.0,  3/24.0,  5/24.0, 71/24.0, 9/24.0, 11/24.0},
+  [M1_IDX] {13/24.0, 15/24.0, 17/24.0, 19/24.0, 21/24.0,  1/24.0,  3/24.0,  5/24.0, 7/24.0,  9/24.0},
+  [S10_IDX]{ 5/12.0,  6/12.0,  7/12.0,  8/12.0,  9/12.0, 11/12.0,  0/12.0,  1/12.0, 2/12.0,  3/12.0},
+  [S1_IDX] { 4/12.0,  5/12.0,  6/12.0,  7/12.0,  8/12.0, 10/12.0, 11/12.0,  0/12.0, 1/12.0,  2/12.0}
 };
 
 static void setDigits(void)
@@ -239,19 +241,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 void strobeInit(void)
 {
   COLON_ENABLE();
-
-  // Start zero detection timer
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
-
-  // Start leds timer
-  // HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_1);
-  // HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_2);
-  // HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_3);
-  // HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_4);
-  // HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_1);
-  // HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_2);
-  // HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_3);
-  // HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_4);
 }
 
 

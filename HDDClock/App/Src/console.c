@@ -15,12 +15,8 @@ static uint8_t data[BUFFER_SIZE] = {0};
 static uint32_t pos = 0;
 
 
-extern int cnt;
-extern TIM_HandleTypeDef htim3;
 extern uint16_t fullSpin;
-extern uint16_t lastCounterValue;
-extern int32_t offset1;
-extern int32_t offset2;
+extern int32_t offsets[];
 
 void initConsole(void)
 {
@@ -35,26 +31,10 @@ static void clearBuffer(void)
   pos = 0;
 }
 
-static void numberTest(uint8_t key)
+static void changeOffset(uint8_t n, int32_t val)
 {
-  if (inProgress)
-  {
-    printf("%c", key);
-    data[pos++] = key;
-
-    if (IS_ENTER(key))
-    {
-      int num = atoi((const char *)data);
-      printf("Number: %d\n", num);
-      inProgress = false;
-      clearBuffer();
-    }
-  }
-  else
-  {
-    printf("Enter number:\n");
-    inProgress = true;
-  }
+  offsets[n - 1] += val;
+  printf("offset%d: %d\n", n, offsets[n - 1]);
 }
 
 // TODO: refactor console interaction
@@ -112,8 +92,6 @@ static void setDate(uint8_t key)
   }
 }
 
-static uint16_t compare = 0;
-
 void processConsoleInput(void)
 {
   // Check if there is new data
@@ -126,13 +104,6 @@ void processConsoleInput(void)
 
   switch (command)
   {
-  case 'q':
-    printf("Console test\n");
-    break;
-
-  case 'w':
-    numberTest(key);
-    break;
 
   case 'p':
     rtcPrintDateTime();
@@ -142,43 +113,53 @@ void processConsoleInput(void)
     rtcUpdateDateTime();
     break;
 
-  case 't':
+  case 'T':
     setTime(key);
     break;
 
-  case 'd':
+  case 'D':
     setDate(key);
-    break;
-
-  case 'z':
-    break;
-
-  case ',':
-    offset1--;
-    printf("offset1: %d\n", offset1);
-    break;
-
-  case '.':
-    offset1++;
-    printf("offset1: %d\n", offset1);
-    break;
-
-  case 'k':
-    offset2--;
-    printf("offset2: %d\n", offset2);
-    break;
-
-  case 'l':
-    offset2++;
-    printf("offset2: %d\n", offset2);
     break;
 
   case 'f':
     printf("full spin: %u\n", fullSpin);
+    break;
 
+  case '1':
+  case '2':
+  case '3':
+  case '4':
+  case '5':
+  case '6':
+    changeOffset(key - '0', 1);
+    break;
+
+  case '!':
+    changeOffset(1, -1);
+    break;
+
+  case '@':
+    changeOffset(2, -1);
+    break;
+
+  case '#':
+    changeOffset(3, -1);
+    break;
+
+  case '$':
+    changeOffset(4, -1);
+    break;
+
+  case '%':
+    changeOffset(5, -1);
+    break;
+
+  case '^':
+    changeOffset(6, -1);
     break;
 
   default:
+    printf("key: %d (0x%02x)\n", key, key);
     break;
   }
 
