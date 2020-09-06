@@ -1,8 +1,5 @@
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
+#include "common.h"
 #include "rtc.h"
-#include "stm32f1xx_hal.h"
 
 #define RTC_ADDRESS             0xD0 // 0x68 << 1
 #define RTC_REG_BASE            0x00
@@ -11,7 +8,7 @@
 #define RTC_I2C_HANDLE          hi2c1
 
 // Converts single char digit into integer using ASCII table offset
-#define TO_NUM(ch)              ((uint8_t)(ch) - 48)
+#define CH_TO_NUM(ch)           ((uint8_t)(ch) - 48)
 
 // Timekeeper registers offset
 enum
@@ -144,14 +141,14 @@ void rtcSetTimeFromString(const char *sTime, uint8_t sLen)
 
   const Time_t time =
   {
-    .hoursH = TO_NUM(sTime[0]),
-    .hoursL = TO_NUM(sTime[1]),
+    .hoursH = CH_TO_NUM(sTime[0]),
+    .hoursL = CH_TO_NUM(sTime[1]),
     // index 2 skipped - colon character
-    .minutesH = TO_NUM(sTime[3]),
-    .minutesL = TO_NUM(sTime[4]),
+    .minutesH = CH_TO_NUM(sTime[3]),
+    .minutesL = CH_TO_NUM(sTime[4]),
     // index 5 skipped - colon character
-    .secondsH = TO_NUM(sTime[6]),
-    .secondsL = TO_NUM(sTime[7])
+    .secondsH = CH_TO_NUM(sTime[6]),
+    .secondsL = CH_TO_NUM(sTime[7])
   };
 
   rtcSetTime(&time);
@@ -183,14 +180,14 @@ void rtcSetDateFromString(const char *sDate, uint8_t sLen)
 
   const Date_t date =
   {
-    .dayH = TO_NUM(sDate[0]),
-    .dayL = TO_NUM(sDate[1]),
+    .dayH = CH_TO_NUM(sDate[0]),
+    .dayL = CH_TO_NUM(sDate[1]),
     // index 2 skipped - slash character
-    .monthH = TO_NUM(sDate[3]),
-    .monthL = TO_NUM(sDate[4]),
+    .monthH = CH_TO_NUM(sDate[3]),
+    .monthL = CH_TO_NUM(sDate[4]),
     // index 5 skipped - slash character
-    .yearH = TO_NUM(sDate[6]),
-    .yearL = TO_NUM(sDate[7])
+    .yearH = CH_TO_NUM(sDate[6]),
+    .yearL = CH_TO_NUM(sDate[7])
   };
 
   rtcSetDate(&date);
@@ -234,4 +231,9 @@ void rtcSetDate(const Date_t *date)
   {
     printf("RTC write failed, status: %d\n", status);
   }
+}
+
+DateTime_t *rtcGetDateTime(void)
+{
+  return &dt;
 }

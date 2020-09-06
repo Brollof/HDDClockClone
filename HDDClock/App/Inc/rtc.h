@@ -1,9 +1,6 @@
 #ifndef __RTC_H
 #define __RTC_H
 
-#include <stdint.h>
-#include <stdbool.h>
-
 typedef struct
 {
   uint8_t secondsH;
@@ -37,5 +34,6 @@ void rtcSetDateFromString(const char *sDate, uint8_t sLen);
 void rtcSetTime(const Time_t *time);
 void rtcSetDate(const Date_t *date);
 void rtcPrintDateTime(void);
+DateTime_t *rtcGetDateTime(void);
 
 #endif
