@@ -116,16 +116,19 @@ bool rtcUpdateDateTime(void)
 }
 
 // Time string example: 09:35:00
-void rtcSetTimeFromString(const char *sTime, uint8_t sLen)
+void rtcSetTimeFromString(const std::string& sTime)
 {
-  if (sLen < 8)
+  printf("Size: %d\n", sTime.size());
+  printf("Input: %s\n", sTime.c_str());
+
+  if (sTime.size() != 8)
   {
-    printf("String time too short!\n");
+    printf("Invalid data length!\n");
     return;
   }
 
   // Validate input
-  for (uint8_t i = 0; i < sLen; i++)
+  for (uint8_t i = 0; i < sTime.size(); i++)
   {
     if (i == 2 || i == 5)
     {
@@ -153,16 +156,16 @@ void rtcSetTimeFromString(const char *sTime, uint8_t sLen)
 }
 
 // Date string example: 03/12/20
-void rtcSetDateFromString(const char *sDate, uint8_t sLen)
+void rtcSetDateFromString(const std::string& sDate)
 {
-  if (sLen < 8)
+  if (sDate.size() != 8)
   {
-    printf("String date too short!\n");
+    printf("Invalid data length!\n");
     return;
   }
 
   // Validate input
-  for (uint8_t i = 0; i < sLen; i++)
+  for (uint8_t i = 0; i < sDate.size(); i++)
   {
     if (i == 2 || i == 5)
     {

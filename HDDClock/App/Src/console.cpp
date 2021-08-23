@@ -2,7 +2,7 @@
 #include "console.h"
 #include "libUart.h"
 #include "rtc.h"
-
+#include <string>
 
 #define BUFFER_SIZE 64
 #define IS_ENTER(ch) ((ch) == '\r' || (ch) == '\n')
@@ -11,9 +11,7 @@ static bool inProgress = false;
 static char command = 0;
 
 static uint8_t key = 0;
-static uint8_t data[BUFFER_SIZE] = {0};
-static uint32_t pos = 0;
-
+static std::string data;
 
 extern uint16_t fullSpin;
 extern int32_t offsets[];
@@ -27,8 +25,7 @@ void initConsole(void)
 
 static void clearBuffer(void)
 {
-  memset(data, 0, sizeof(data));
-  pos = 0;
+	data.clear();
 }
 
 static void changeOffset(uint8_t n, int32_t val)
@@ -42,20 +39,22 @@ static void setTime(uint8_t key)
 {
   if (inProgress)
   {
-    printf("%c", key);
-    // Skip backspace character and remove last char
-    if ((uint8_t)key == 127)
-      pos--;
-    else
-      data[pos++] = key;
-
     if (IS_ENTER(key))
     {
       printf("\n");
-      rtcSetTimeFromString((const char *)data, 8);
+      rtcSetTimeFromString(data);
 
       inProgress = false;
       clearBuffer();
+    }
+    else
+    {
+      printf("%c", key);
+      // Skip backspace character and remove last char
+      if ((uint8_t)key == 127)
+        data.pop_back();
+      else
+        data += key;
     }
   }
   else
@@ -69,20 +68,22 @@ static void setDate(uint8_t key)
 {
   if (inProgress)
   {
-    printf("%c", key);
-    // Skip backspace character and remove last char
-    if ((uint8_t)key == 127)
-      pos--;
-    else
-      data[pos++] = key;
-
     if (IS_ENTER(key))
     {
       printf("\n");
-      rtcSetDateFromString((const char *)data, 8);
+      rtcSetDateFromString(data);
 
       inProgress = false;
       clearBuffer();
+    }
+    else
+    {
+      printf("%c", key);
+      // Skip backspace character and remove last char
+      if ((uint8_t)key == 127)
+        data.pop_back();
+      else
+        data += key;
     }
   }
   else
