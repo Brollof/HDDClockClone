@@ -118,9 +118,6 @@ bool rtcUpdateDateTime(void)
 // Time string example: 09:35:00
 void rtcSetTimeFromString(const std::string& sTime)
 {
-  printf("Size: %d\n", sTime.size());
-  printf("Input: %s\n", sTime.c_str());
-
   if (sTime.size() != 8)
   {
     printf("Invalid data length!\n");
