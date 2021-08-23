@@ -96,7 +96,7 @@ bool rtcUpdateDateTime(void)
     return false;
   }
 
-  printf("RTC read ok\n");
+  // printf("RTC read ok\n");
 
   dt.time.secondsH = (buf[SECONDS_IDX] & 0x7F) >> 4;
   dt.time.secondsL = buf[SECONDS_IDX] & 0x0F;
