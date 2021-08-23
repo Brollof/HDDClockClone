@@ -2,31 +2,33 @@
 #include "strobe.h"
 
 #define LED_PORT              GPIOC
-#define H10_LED_ON()          HAL_GPIO_WritePin(LED_PORT, H10_Pin, 1)
-#define H1_LED_ON()           HAL_GPIO_WritePin(LED_PORT, H1_Pin, 1)
-#define M10_LED_ON()          HAL_GPIO_WritePin(LED_PORT, M10_Pin, 1)
-#define M1_LED_ON()           HAL_GPIO_WritePin(LED_PORT, M1_Pin, 1)
-#define S10_LED_ON()          HAL_GPIO_WritePin(LED_PORT, S10_Pin, 1)
-#define S1_LED_ON()           HAL_GPIO_WritePin(LED_PORT, S1_Pin, 1)
-#define HH_LED_ON()           HAL_GPIO_WritePin(LED_PORT, HH_Pin, 1)
-#define MM_LED_ON()           HAL_GPIO_WritePin(LED_PORT, MM_Pin, 1)
+#define PIN_STATE(v)          ((GPIO_PinState)v)
+
+#define H10_LED_ON()          HAL_GPIO_WritePin(LED_PORT, H10_Pin, PIN_STATE(1))
+#define H1_LED_ON()           HAL_GPIO_WritePin(LED_PORT, H1_Pin, PIN_STATE(1))
+#define M10_LED_ON()          HAL_GPIO_WritePin(LED_PORT, M10_Pin, PIN_STATE(1))
+#define M1_LED_ON()           HAL_GPIO_WritePin(LED_PORT, M1_Pin, PIN_STATE(1))
+#define S10_LED_ON()          HAL_GPIO_WritePin(LED_PORT, S10_Pin, PIN_STATE(1))
+#define S1_LED_ON()           HAL_GPIO_WritePin(LED_PORT, S1_Pin, PIN_STATE(1))
+#define HH_LED_ON()           HAL_GPIO_WritePin(LED_PORT, HH_Pin, PIN_STATE(1))
+#define MM_LED_ON()           HAL_GPIO_WritePin(LED_PORT, MM_Pin, PIN_STATE(1))
 
 #define ALL_LEDS_OFF()        HAL_GPIO_WritePin(LED_PORT, H10_Pin | H1_Pin | M10_Pin | M1_Pin | \
-                                S10_Pin | S1_Pin | HH_Pin | MM_Pin, 0)
+                                S10_Pin | S1_Pin | HH_Pin | MM_Pin, PIN_STATE(0))
 
-#define COLON_ENABLE()        HAL_GPIO_WritePin(COLON_GPIO_Port, COLON_Pin, 1)
-#define COLON_DISABLE()       HAL_GPIO_WritePin(COLON_GPIO_Port, COLON_Pin, 0)
+#define COLON_ENABLE()        HAL_GPIO_WritePin(COLON_GPIO_Port, COLON_Pin, PIN_STATE(1))
+#define COLON_DISABLE()       HAL_GPIO_WritePin(COLON_GPIO_Port, COLON_Pin, PIN_STATE(0))
 
-#define GET_CNT_VAL(idx, digit) ((fullSpin * factors[idx][digit] + offsets[idx]))
+#define GET_CNT_VAL(idx, digit) ((fullSpin * factors[static_cast<int>(idx)][digit] + offsets[static_cast<int>(idx)]))
 
-#define DIGIT_1_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, GET_CNT_VAL(H10_IDX, d))
-#define DIGIT_2_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, GET_CNT_VAL(H1_IDX, d))
+#define DIGIT_1_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, GET_CNT_VAL(Digits::H10_IDX, d))
+#define DIGIT_2_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, GET_CNT_VAL(Digits::H1_IDX, d))
 #define COLON_HH_SET_TIMER()  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, fullSpin * 5 / 48)
-#define DIGIT_3_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, GET_CNT_VAL(M10_IDX, d))
-#define DIGIT_4_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, GET_CNT_VAL(M1_IDX, d))
+#define DIGIT_3_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, GET_CNT_VAL(Digits::M10_IDX, d))
+#define DIGIT_4_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, GET_CNT_VAL(Digits::M1_IDX, d))
 #define COLON_MM_SET_TIMER()  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, fullSpin * 19 / 48)
-#define DIGIT_5_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, GET_CNT_VAL(S10_IDX, d))
-#define DIGIT_6_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, GET_CNT_VAL(S1_IDX, d))
+#define DIGIT_5_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, GET_CNT_VAL(Digits::S10_IDX, d))
+#define DIGIT_6_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, GET_CNT_VAL(Digits::S1_IDX, d))
 
 #define DIGIT_1_START()       HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_1)
 #define DIGIT_2_START()       HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_2)
@@ -61,12 +63,12 @@ int32_t offsets[6] = {0};
 static const float factors[][10] =
 {
   //          0      1         2        3        4        5        6        7       8        9
-  [H10_IDX]{10/12.0, 11/12.0,    0.01,  1/12.0,  2/12.0,  4/12.0,  5/12.0,  6/12.0, 7/12.0,  8/12.0},
-  [H1_IDX] { 9/12.0, 10/12.0, 11/12.0,    0.01,  1/12.0,  3/12.0,  4/12.0,  5/12.0, 6/12.0,  7/12.0},
-  [M10_IDX]{15/24.0, 17/24.0, 19/24.0, 21/24.0, 23/24.0,  3/24.0,  5/24.0, 71/24.0, 9/24.0, 11/24.0},
-  [M1_IDX] {13/24.0, 15/24.0, 17/24.0, 19/24.0, 21/24.0,  1/24.0,  3/24.0,  5/24.0, 7/24.0,  9/24.0},
-  [S10_IDX]{ 5/12.0,  6/12.0,  7/12.0,  8/12.0,  9/12.0, 11/12.0,    0.01,  1/12.0, 2/12.0,  3/12.0},
-  [S1_IDX] { 4/12.0,  5/12.0,  6/12.0,  7/12.0,  8/12.0, 10/12.0, 11/12.0,    0.01, 1/12.0,  2/12.0}
+  {10/12.0, 11/12.0,    0.01,  1/12.0,  2/12.0,  4/12.0,  5/12.0,  6/12.0, 7/12.0,  8/12.0},
+  { 9/12.0, 10/12.0, 11/12.0,    0.01,  1/12.0,  3/12.0,  4/12.0,  5/12.0, 6/12.0,  7/12.0},
+  {15/24.0, 17/24.0, 19/24.0, 21/24.0, 23/24.0,  3/24.0,  5/24.0, 71/24.0, 9/24.0, 11/24.0},
+  {13/24.0, 15/24.0, 17/24.0, 19/24.0, 21/24.0,  1/24.0,  3/24.0,  5/24.0, 7/24.0,  9/24.0},
+  { 5/12.0,  6/12.0,  7/12.0,  8/12.0,  9/12.0, 11/12.0,    0.01,  1/12.0, 2/12.0,  3/12.0},
+  { 4/12.0,  5/12.0,  6/12.0,  7/12.0,  8/12.0, 10/12.0, 11/12.0,    0.01, 1/12.0,  2/12.0}
 };
 
 static void setDigits(void)

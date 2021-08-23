@@ -21,15 +21,18 @@ static void sendChar(char c)
   TxTransferCompleted = false;
 }
 
-#ifdef __GNUC__
-int __io_putchar(int c)
-#else
-int fputc(int c, FILE *f)
-#endif
+extern "C"
 {
-  if (c == '\n') sendChar('\r');
-  sendChar(c);
-  return c;
+  #ifdef __GNUC__
+  int __io_putchar(int c)
+  #else
+  int fputc(int c, FILE *f)
+  #endif
+  {
+    if (c == '\n') sendChar('\r');
+    sendChar(c);
+    return c;
+  }
 }
 
 void setRxBuffer(uint8_t* buf)

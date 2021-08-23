@@ -3,7 +3,8 @@
 
 #define DIGITS_ALL 0x3F
 
-enum
+
+enum class Digits
 {
   H10_IDX = 0,
   H1_IDX,

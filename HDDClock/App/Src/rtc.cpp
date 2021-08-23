@@ -141,14 +141,12 @@ void rtcSetTimeFromString(const char *sTime, uint8_t sLen)
 
   const Time_t time =
   {
-    .hoursH = CH_TO_NUM(sTime[0]),
-    .hoursL = CH_TO_NUM(sTime[1]),
-    // index 2 skipped - colon character
+    .secondsH = CH_TO_NUM(sTime[6]),
+    .secondsL = CH_TO_NUM(sTime[7]),
     .minutesH = CH_TO_NUM(sTime[3]),
     .minutesL = CH_TO_NUM(sTime[4]),
-    // index 5 skipped - colon character
-    .secondsH = CH_TO_NUM(sTime[6]),
-    .secondsL = CH_TO_NUM(sTime[7])
+    .hoursH = CH_TO_NUM(sTime[0]),
+    .hoursL = CH_TO_NUM(sTime[1])
   };
 
   rtcSetTime(&time);
