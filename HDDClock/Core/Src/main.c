@@ -197,8 +197,8 @@ void SystemClock_Config(void)
   }
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
-                                | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -490,9 +490,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, H10_Pin | H1_Pin | HH_Pin | M10_Pin
-                    | M1_Pin | MM_Pin | S10_Pin | S1_Pin
-                    | COLON_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, H10_Pin|H1_Pin|HH_Pin|M10_Pin
+                          |M1_Pin|MM_Pin|S10_Pin|S1_Pin
+                          |COLON_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
@@ -506,9 +506,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : H10_Pin H1_Pin HH_Pin M10_Pin
                            M1_Pin MM_Pin S10_Pin S1_Pin
                            COLON_Pin */
-  GPIO_InitStruct.Pin = H10_Pin | H1_Pin | HH_Pin | M10_Pin
-                        | M1_Pin | MM_Pin | S10_Pin | S1_Pin
-                        | COLON_Pin;
+  GPIO_InitStruct.Pin = H10_Pin|H1_Pin|HH_Pin|M10_Pin
+                          |M1_Pin|MM_Pin|S10_Pin|S1_Pin
+                          |COLON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
