@@ -8,7 +8,7 @@
 #define RTC_I2C_HANDLE          hi2c1
 
 // Converts single char digit into integer using ASCII table offset
-#define CH_TO_NUM(ch)           ((uint8_t)(ch) - 48)
+#define CH_TO_NUM(ch)           (static_cast<uint8_t>(ch - 48))
 
 // Timekeeper registers offset
 enum
