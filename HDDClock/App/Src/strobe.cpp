@@ -19,7 +19,7 @@
 #define COLON_ENABLE()            HAL_GPIO_WritePin(COLON_GPIO_Port, COLON_Pin, PIN_STATE(1))
 #define COLON_DISABLE()           HAL_GPIO_WritePin(COLON_GPIO_Port, COLON_Pin, PIN_STATE(0))
 
-#define GET_CNT_VAL(idx, digit)   ((fullSpin * factors[static_cast<int>(idx)][digit] + offsets[static_cast<int>(idx)]))
+#define GET_CNT_VAL(idx, digit)   ((fullSpin * factors[static_cast<int>(idx)][digit]))
 
 #define DIGIT_1_SET_TIMER(d)      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, GET_CNT_VAL(Digits::H10_IDX, d))
 #define DIGIT_2_SET_TIMER(d)      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, GET_CNT_VAL(Digits::H1_IDX, d))
@@ -53,22 +53,19 @@ extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 
 volatile uint16_t fullSpin = 0;
+
 static volatile bool newSpin = false;
-
 static StrobeCfg_t cfg = {0};
-
-// Offsets for 6 digits
-int32_t offsets[6] = {0};
 
 static const float factors[][10] =
 {
-  //          0      1         2        3        4        5        6        7       8        9
-  {10/12.0, 11/12.0,    0.01,  1/12.0,  2/12.0,  4/12.0,  5/12.0,  6/12.0, 7/12.0,  8/12.0},
-  { 9/12.0, 10/12.0, 11/12.0,    0.01,  1/12.0,  3/12.0,  4/12.0,  5/12.0, 6/12.0,  7/12.0},
-  {15/24.0, 17/24.0, 19/24.0, 21/24.0, 23/24.0,  3/24.0,  5/24.0, 71/24.0, 9/24.0, 11/24.0},
-  {13/24.0, 15/24.0, 17/24.0, 19/24.0, 21/24.0,  1/24.0,  3/24.0,  5/24.0, 7/24.0,  9/24.0},
-  { 5/12.0,  6/12.0,  7/12.0,  8/12.0,  9/12.0, 11/12.0,    0.01,  1/12.0, 2/12.0,  3/12.0},
-  { 4/12.0,  5/12.0,  6/12.0,  7/12.0,  8/12.0, 10/12.0, 11/12.0,    0.01, 1/12.0,  2/12.0}
+  //   0      1         2        3        4        5        6        7       8        9
+  {10/12.0, 11/12.0,    0.01,  1/12.0,  2/12.0,  4/12.0,  5/12.0,  6/12.0, 7/12.0,  8/12.0}, /* H10 */
+  { 9/12.0, 10/12.0, 11/12.0,    0.01,  1/12.0,  3/12.0,  4/12.0,  5/12.0, 6/12.0,  7/12.0}, /* H1  */
+  {15/24.0, 17/24.0, 19/24.0, 21/24.0, 23/24.0,  3/24.0,  5/24.0, 71/24.0, 9/24.0, 11/24.0}, /* M10 */
+  {13/24.0, 15/24.0, 17/24.0, 19/24.0, 21/24.0,  1/24.0,  3/24.0,  5/24.0, 7/24.0,  9/24.0}, /* M1  */
+  { 5/12.0,  6/12.0,  7/12.0,  8/12.0,  9/12.0, 11/12.0,    0.01,  1/12.0, 2/12.0,  3/12.0}, /* S10 */
+  { 4/12.0,  5/12.0,  6/12.0,  7/12.0,  8/12.0, 10/12.0, 11/12.0,    0.01, 1/12.0,  2/12.0}  /* S1  */
 };
 
 static void setDigits(void)

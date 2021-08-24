@@ -17,7 +17,6 @@ static uint8_t key = 0;
 static std::string data;
 
 extern uint16_t fullSpin;
-extern int32_t offsets[];
 
 void initConsole(void)
 {
@@ -29,12 +28,6 @@ void initConsole(void)
 static void clearBuffer(void)
 {
 	data.clear();
-}
-
-static void changeOffset(uint8_t n, int32_t val)
-{
-  offsets[n - 1] += val;
-  printf("offset%d: %d\n", n, static_cast<int>(offsets[n - 1]));
 }
 
 // Sets date or time based on 'dt' parameter
@@ -110,39 +103,6 @@ void processConsoleInput(void)
 
   case 'f':
     printf("full spin: %u\n", fullSpin);
-    break;
-
-  case '1':
-  case '2':
-  case '3':
-  case '4':
-  case '5':
-  case '6':
-    changeOffset(key - '0', 1);
-    break;
-
-  case '!':
-    changeOffset(1, -1);
-    break;
-
-  case '@':
-    changeOffset(2, -1);
-    break;
-
-  case '#':
-    changeOffset(3, -1);
-    break;
-
-  case '$':
-    changeOffset(4, -1);
-    break;
-
-  case '%':
-    changeOffset(5, -1);
-    break;
-
-  case '^':
-    changeOffset(6, -1);
     break;
 
   default:
