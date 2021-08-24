@@ -56,9 +56,8 @@ void rtcInit(void)
 {
   uint8_t retries = RTC_INIT_RETRIES;
 
-  while (retries)
+  while (retries--)
   {
-    retries--;
     if (rtcUpdateDateTime() == true)
     {
       printf("RTC initialized\n");
@@ -127,7 +126,7 @@ void rtcSetTimeFromString(const std::string& sTime)
   // Validate input
   for (uint8_t i = 0; i < sTime.size(); i++)
   {
-    if (i == 2 || i == 5)
+    if (i == 2 || i == 5) // skip colon
     {
       continue;
     }
@@ -164,7 +163,7 @@ void rtcSetDateFromString(const std::string& sDate)
   // Validate input
   for (uint8_t i = 0; i < sDate.size(); i++)
   {
-    if (i == 2 || i == 5)
+    if (i == 2 || i == 5) // skip slash
     {
       continue;
     }

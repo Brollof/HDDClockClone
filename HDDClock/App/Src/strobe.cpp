@@ -1,52 +1,52 @@
 #include "common.h"
 #include "strobe.h"
 
-#define LED_PORT              GPIOC
-#define PIN_STATE(v)          ((GPIO_PinState)v)
+#define LED_PORT                  GPIOC
+#define PIN_STATE(v)              ((GPIO_PinState)v)
 
-#define H10_LED_ON()          HAL_GPIO_WritePin(LED_PORT, H10_Pin, PIN_STATE(1))
-#define H1_LED_ON()           HAL_GPIO_WritePin(LED_PORT, H1_Pin, PIN_STATE(1))
-#define M10_LED_ON()          HAL_GPIO_WritePin(LED_PORT, M10_Pin, PIN_STATE(1))
-#define M1_LED_ON()           HAL_GPIO_WritePin(LED_PORT, M1_Pin, PIN_STATE(1))
-#define S10_LED_ON()          HAL_GPIO_WritePin(LED_PORT, S10_Pin, PIN_STATE(1))
-#define S1_LED_ON()           HAL_GPIO_WritePin(LED_PORT, S1_Pin, PIN_STATE(1))
-#define HH_LED_ON()           HAL_GPIO_WritePin(LED_PORT, HH_Pin, PIN_STATE(1))
-#define MM_LED_ON()           HAL_GPIO_WritePin(LED_PORT, MM_Pin, PIN_STATE(1))
+#define H10_LED_ON()              HAL_GPIO_WritePin(LED_PORT, H10_Pin, PIN_STATE(1))
+#define H1_LED_ON()               HAL_GPIO_WritePin(LED_PORT, H1_Pin, PIN_STATE(1))
+#define M10_LED_ON()              HAL_GPIO_WritePin(LED_PORT, M10_Pin, PIN_STATE(1))
+#define M1_LED_ON()               HAL_GPIO_WritePin(LED_PORT, M1_Pin, PIN_STATE(1))
+#define S10_LED_ON()              HAL_GPIO_WritePin(LED_PORT, S10_Pin, PIN_STATE(1))
+#define S1_LED_ON()               HAL_GPIO_WritePin(LED_PORT, S1_Pin, PIN_STATE(1))
+#define HH_LED_ON()               HAL_GPIO_WritePin(LED_PORT, HH_Pin, PIN_STATE(1))
+#define MM_LED_ON()               HAL_GPIO_WritePin(LED_PORT, MM_Pin, PIN_STATE(1))
 
-#define ALL_LEDS_OFF()        HAL_GPIO_WritePin(LED_PORT, H10_Pin | H1_Pin | M10_Pin | M1_Pin | \
-                                S10_Pin | S1_Pin | HH_Pin | MM_Pin, PIN_STATE(0))
+#define ALL_LEDS_OFF()            HAL_GPIO_WritePin(LED_PORT, H10_Pin | H1_Pin | M10_Pin | M1_Pin | \
+                                    S10_Pin | S1_Pin | HH_Pin | MM_Pin, PIN_STATE(0))
 
-#define COLON_ENABLE()        HAL_GPIO_WritePin(COLON_GPIO_Port, COLON_Pin, PIN_STATE(1))
-#define COLON_DISABLE()       HAL_GPIO_WritePin(COLON_GPIO_Port, COLON_Pin, PIN_STATE(0))
+#define COLON_ENABLE()            HAL_GPIO_WritePin(COLON_GPIO_Port, COLON_Pin, PIN_STATE(1))
+#define COLON_DISABLE()           HAL_GPIO_WritePin(COLON_GPIO_Port, COLON_Pin, PIN_STATE(0))
 
-#define GET_CNT_VAL(idx, digit) ((fullSpin * factors[static_cast<int>(idx)][digit] + offsets[static_cast<int>(idx)]))
+#define GET_CNT_VAL(idx, digit)   ((fullSpin * factors[static_cast<int>(idx)][digit] + offsets[static_cast<int>(idx)]))
 
-#define DIGIT_1_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, GET_CNT_VAL(Digits::H10_IDX, d))
-#define DIGIT_2_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, GET_CNT_VAL(Digits::H1_IDX, d))
-#define COLON_HH_SET_TIMER()  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, fullSpin * 5 / 48)
-#define DIGIT_3_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, GET_CNT_VAL(Digits::M10_IDX, d))
-#define DIGIT_4_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, GET_CNT_VAL(Digits::M1_IDX, d))
-#define COLON_MM_SET_TIMER()  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, fullSpin * 19 / 48)
-#define DIGIT_5_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, GET_CNT_VAL(Digits::S10_IDX, d))
-#define DIGIT_6_SET_TIMER(d)  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, GET_CNT_VAL(Digits::S1_IDX, d))
+#define DIGIT_1_SET_TIMER(d)      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, GET_CNT_VAL(Digits::H10_IDX, d))
+#define DIGIT_2_SET_TIMER(d)      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, GET_CNT_VAL(Digits::H1_IDX, d))
+#define COLON_HH_SET_TIMER()      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, fullSpin * 5 / 48)
+#define DIGIT_3_SET_TIMER(d)      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, GET_CNT_VAL(Digits::M10_IDX, d))
+#define DIGIT_4_SET_TIMER(d)      __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, GET_CNT_VAL(Digits::M1_IDX, d))
+#define COLON_MM_SET_TIMER()      __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, fullSpin * 19 / 48)
+#define DIGIT_5_SET_TIMER(d)      __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, GET_CNT_VAL(Digits::S10_IDX, d))
+#define DIGIT_6_SET_TIMER(d)      __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, GET_CNT_VAL(Digits::S1_IDX, d))
 
-#define DIGIT_1_START()       HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_1)
-#define DIGIT_2_START()       HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_2)
-#define COLON_HH_START()      HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_3)
-#define DIGIT_3_START()       HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_4)
-#define DIGIT_4_START()       HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_1)
-#define COLON_MM_START()      HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_2)
-#define DIGIT_5_START()       HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_3)
-#define DIGIT_6_START()       HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_4)
+#define DIGIT_1_START()           HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_1)
+#define DIGIT_2_START()           HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_2)
+#define COLON_HH_START()          HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_3)
+#define DIGIT_3_START()           HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_4)
+#define DIGIT_4_START()           HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_1)
+#define COLON_MM_START()          HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_2)
+#define DIGIT_5_START()           HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_3)
+#define DIGIT_6_START()           HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_4)
 
-#define DIGIT_1_STOP()        HAL_TIM_OC_Stop_IT(&htim3, TIM_CHANNEL_1)
-#define DIGIT_2_STOP()        HAL_TIM_OC_Stop_IT(&htim3, TIM_CHANNEL_2)
-#define COLON_HH_STOP()       HAL_TIM_OC_Stop_IT(&htim3, TIM_CHANNEL_3)
-#define DIGIT_3_STOP()        HAL_TIM_OC_Stop_IT(&htim3, TIM_CHANNEL_4)
-#define DIGIT_4_STOP()        HAL_TIM_OC_Stop_IT(&htim4, TIM_CHANNEL_1)
-#define COLON_MM_STOP()       HAL_TIM_OC_Stop_IT(&htim4, TIM_CHANNEL_2)
-#define DIGIT_5_STOP()        HAL_TIM_OC_Stop_IT(&htim4, TIM_CHANNEL_3)
-#define DIGIT_6_STOP()        HAL_TIM_OC_Stop_IT(&htim4, TIM_CHANNEL_4)
+#define DIGIT_1_STOP()            HAL_TIM_OC_Stop_IT(&htim3, TIM_CHANNEL_1)
+#define DIGIT_2_STOP()            HAL_TIM_OC_Stop_IT(&htim3, TIM_CHANNEL_2)
+#define COLON_HH_STOP()           HAL_TIM_OC_Stop_IT(&htim3, TIM_CHANNEL_3)
+#define DIGIT_3_STOP()            HAL_TIM_OC_Stop_IT(&htim3, TIM_CHANNEL_4)
+#define DIGIT_4_STOP()            HAL_TIM_OC_Stop_IT(&htim4, TIM_CHANNEL_1)
+#define COLON_MM_STOP()           HAL_TIM_OC_Stop_IT(&htim4, TIM_CHANNEL_2)
+#define DIGIT_5_STOP()            HAL_TIM_OC_Stop_IT(&htim4, TIM_CHANNEL_3)
+#define DIGIT_6_STOP()            HAL_TIM_OC_Stop_IT(&htim4, TIM_CHANNEL_4)
 
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
@@ -246,7 +246,6 @@ void strobeInit(void)
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
 }
 
-
 bool isZeroDetected(void)
 {
   return newSpin;
@@ -255,5 +254,4 @@ bool isZeroDetected(void)
 void setStrobeCfg(const StrobeCfg_t *newCfg)
 {
   memcpy(&cfg, newCfg, sizeof(cfg));
-
 }

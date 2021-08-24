@@ -5,7 +5,10 @@
 #include <string>
 
 #define BUFFER_SIZE 64
+#define BACKSPACE   127
 #define IS_ENTER(ch) ((ch) == '\r' || (ch) == '\n')
+
+enum DateTime {DATE, TIME};
 
 static bool inProgress = false;
 static char command = 0;
@@ -31,18 +34,21 @@ static void clearBuffer(void)
 static void changeOffset(uint8_t n, int32_t val)
 {
   offsets[n - 1] += val;
-  printf("offset%d: %d\n", n, offsets[n - 1]);
+  printf("offset%d: %d\n", n, static_cast<int>(offsets[n - 1]));
 }
 
-// TODO: refactor console interaction
-static void setTime(uint8_t key)
+// Sets date or time based on 'dt' parameter
+static void setDateTime(uint8_t key, DateTime dt)
 {
   if (inProgress)
   {
     if (IS_ENTER(key))
     {
       printf("\n");
-      rtcSetTimeFromString(data);
+      if (dt == DateTime::TIME)
+        rtcSetTimeFromString(data);
+      else
+        rtcSetDateFromString(data);
 
       inProgress = false;
       clearBuffer();
@@ -51,44 +57,24 @@ static void setTime(uint8_t key)
     {
       printf("%c", key);
       // Skip backspace character and remove last char
-      if ((uint8_t)key == 127)
-        data.pop_back();
+      if ((uint8_t)key == BACKSPACE)
+      {
+        if (data.size() > 0)
+          data.pop_back();
+      }
       else
+      {
         data += key;
+      }
     }
   }
   else
   {
-    printf("Enter new time (hh:mm:ss):\n");
-    inProgress = true;
-  }
-}
-
-static void setDate(uint8_t key)
-{
-  if (inProgress)
-  {
-    if (IS_ENTER(key))
-    {
-      printf("\n");
-      rtcSetDateFromString(data);
-
-      inProgress = false;
-      clearBuffer();
-    }
+    if (dt == DateTime::TIME)
+      printf("Enter new time (hh:mm:ss):\n");
     else
-    {
-      printf("%c", key);
-      // Skip backspace character and remove last char
-      if ((uint8_t)key == 127)
-        data.pop_back();
-      else
-        data += key;
-    }
-  }
-  else
-  {
-    printf("Enter new date (dd/mm/yy):\n");
+      printf("Enter new date (dd/mm/yy):\n");
+
     inProgress = true;
   }
 }
@@ -115,11 +101,11 @@ void processConsoleInput(void)
     break;
 
   case 'T':
-    setTime(key);
+    setDateTime(key, DateTime::TIME);
     break;
 
   case 'D':
-    setDate(key);
+    setDateTime(key, DateTime::DATE);
     break;
 
   case 'f':

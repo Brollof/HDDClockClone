@@ -21,13 +21,15 @@ static void sendChar(char c)
   TxTransferCompleted = false;
 }
 
+// This part of code needs to be compiled by gcc
+// otherwise printf output wouldn't work
 extern "C"
 {
-  #ifdef __GNUC__
+#ifdef __GNUC__
   int __io_putchar(int c)
-  #else
+#else
   int fputc(int c, FILE *f)
-  #endif
+#endif
   {
     if (c == '\n') sendChar('\r');
     sendChar(c);
