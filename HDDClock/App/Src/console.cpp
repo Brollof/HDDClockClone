@@ -10,6 +10,14 @@
 
 enum DateTime {DATE, TIME};
 
+
+
+extern DMA_HandleTypeDef hdma_memtomem_dma1_channel1;
+static volatile uint8_t dmaData = 0xFF;
+
+extern TIM_HandleTypeDef htim3;
+extern uint32_t maxSector;
+
 static bool inProgress = false;
 static char command = 0;
 
@@ -103,6 +111,40 @@ void processConsoleInput(void)
 
   case 'f':
     printf("full spin: %u\n", fullSpin);
+    break;
+
+  case 'd':
+  {
+    printf("Aborting dma...\n");
+    HAL_StatusTypeDef status = HAL_DMA_Abort(&hdma_memtomem_dma1_channel1);
+    printf("status: %d\n", status);
+
+    printf("DMA Start with data: %d\n", dmaData);
+    status = HAL_DMA_Start(&hdma_memtomem_dma1_channel1, (uint32_t)&dmaData, (uint32_t)&GPIOC->ODR, 1);
+    printf("status: %d\n", status);
+
+    //printf("Polling for DMA completion...\n");
+    //status = HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_channel1, HAL_DMA_FULL_TRANSFER, 2000);
+    //printf("status: %d\n", status);
+
+    break;
+  }
+
+  case 'r':
+    dmaData ^= 0xFF;
+    printf("Current DMA data: 0x%02x\n", dmaData);
+    break;
+
+  case 's':
+  {
+    int temp = fullSpin / 24.0;
+    printf("TIM3 Compare set to: %d\n", temp);
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, temp);
+    break;
+  }
+
+  case 'm':
+    printf("Max sector: %d\n", (int)maxSector);
     break;
 
   default:
