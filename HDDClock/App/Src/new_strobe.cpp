@@ -54,7 +54,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
     if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
     {
       __HAL_TIM_SET_COUNTER(&htim3, 0);
-      if (sector == 21)
+      if (sector == 1) // sector 21 for stable 12
       {
         // HAL_DMA_Abort(&hdma_memtomem_dma1_channel1);
         HAL_DMA_Start(&hdma_memtomem_dma1_channel1, (uint32_t)&dmaData, (uint32_t)&GPIOC->ODR, 1);
