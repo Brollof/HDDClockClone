@@ -11,4 +11,8 @@ This project is rewrite of the original HDDClock - https://github.com/pawsko/HDD
 - [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html)
 
 ## Media
+#### HDD Clock
+<img src="media/clock.png" width="50%" height="50%" title="HDD Clock">
 
+#### Serial console
+<img src="media/console.png" title="HDD Clock console">
