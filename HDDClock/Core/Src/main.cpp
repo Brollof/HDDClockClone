@@ -131,21 +131,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    // if (isZeroDetected())
-    // {
-    //   dt = rtcGetDateTime();
-
-    //   cfg.digitsEnabled.all = DIGITS_ALL;
-    //   cfg.d1 = dt->time.hoursH;
-    //   cfg.d2 = dt->time.hoursL;
-    //   cfg.d3 = dt->time.minutesH;
-    //   cfg.d4 = dt->time.minutesL;
-    //   cfg.d5 = dt->time.secondsH;
-    //   cfg.d6 = dt->time.secondsH;
-    //   cfg.colonHH = true;
-    //   cfg.colonMM = true;
-    //   setStrobeCfg(&cfg);
-    // }
 
     now = HAL_GetTick();
     if (now - lastHeartbeatTick >= 1000)
@@ -167,8 +152,6 @@ int main(void)
       cfg.colonMM = true;
       setStrobeCfg(&cfg);
     }
-
-    // HAL_Delay(10);
   }
   /* USER CODE END 3 */
 }

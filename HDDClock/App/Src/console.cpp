@@ -50,7 +50,7 @@ static void setDateTime(uint8_t key, DateTime dt)
     {
       printf("%c", key);
       // Skip backspace character and remove last char
-      if ((uint8_t)key == BACKSPACE)
+      if (key == BACKSPACE)
       {
         if (data.size() > 0)
           data.pop_back();
